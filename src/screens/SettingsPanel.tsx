@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listVoices, onVoicesChanged, playSeq, setVoice, voiceStatus, type VoiceOption } from '../lib/speech'
-import { startMic } from '../lib/mic'
+import { BLOW_LEVEL, micLevel, startMic } from '../lib/mic'
 import type { Settings, Story } from '../data/types'
 
 export function SettingsPanel({ settings, onChange, usedSec, onResetUsed, saved, onDelete, onClose }: {
@@ -75,6 +75,7 @@ export function SettingsPanel({ settings, onChange, usedSec, onResetUsed, saved,
             if (await startMic()) { set({ mic: true }); setMicMsg('이제 입으로 후~ 불면 진행돼요.') }
             else setMicMsg('마이크를 쓸 수 없어요. 권한을 확인해 주세요. 꾹 누르기로 진행돼요.')
           }}>{settings.mic ? '🎤 마이크 켜짐' : '🎤 마이크로 불기 켜기'}</button>
+          {settings.mic && <MicMeter />}
           <div className="small">{micMsg}</div>
         </div>
         <div className="row">
@@ -87,6 +88,27 @@ export function SettingsPanel({ settings, onChange, usedSec, onResetUsed, saved,
         </div>
         <button className="pbtn" onClick={onClose}>닫기</button>
       </div>
+    </div>
+  )
+}
+
+/** 마이크 테스트: 후~ 불면 막대가 차고, 선을 넘으면 초록색이 돼요 */
+function MicMeter() {
+  const [lv, setLv] = useState(0)
+  useEffect(() => {
+    let raf = 0
+    const tick = () => { setLv(micLevel()); raf = requestAnimationFrame(tick) }
+    tick()
+    return () => cancelAnimationFrame(raf)
+  }, [])
+  const max = BLOW_LEVEL * 3, on = lv > BLOW_LEVEL
+  return (
+    <div style={{ margin: '8px 0' }}>
+      <div style={{ position: 'relative', height: 14, borderRadius: 7, background: '#0001', overflow: 'hidden' }}>
+        <div style={{ width: Math.min(100, lv / max * 100) + '%', height: '100%', background: on ? '#4CAF50' : '#F2A65A', transition: 'width 60ms' }} />
+        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 100 / 3 + '%', width: 2, background: '#3B2F2A' }} />
+      </div>
+      <div className="small">{on ? '좋아요! 불고 있는 걸로 알아들었어요.' : '마이크에 대고 후~ 불어서 막대가 선을 넘는지 확인해 보세요.'}</div>
     </div>
   )
 }
