@@ -37,8 +37,10 @@ docs/story-prompt.md      서버에서 쓸 동화 생성 프롬프트
 
 ## 로드맵
 
-### 1단계: PWA로 배포 (지금)
-1. GitHub에 올리고 Vercel(또는 Netlify)에 연결 → `npm run build`, 출력 폴더 `dist`
+### 1단계: PWA로 배포 ✅ 완료 (2026-11-25)
+배포 주소: https://ijae-jaejal.vercel.app (`main`에 push하면 Vercel이 자동 배포)
+
+1. GitHub에 올리고 Vercel(또는 Netlify)에 연결 → `npm run build`, 출력 폴더 `dist` (Node 24.x)
 2. 아이가 쓸 폰에서 주소 열기
    - **아이폰**: Safari → 공유 → "홈 화면에 추가"
    - **안드로이드**: Chrome → 메뉴 → "앱 설치" (또는 "홈 화면에 추가")
