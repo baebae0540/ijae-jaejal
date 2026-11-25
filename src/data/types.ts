@@ -33,4 +33,6 @@ export interface Settings {
   voice?: string
   /** 목소리 높낮이 (0.9 낮게 ~ 1.2 높게) */
   pitch?: number
+  /** 후~ 불기 감지 기준 (작을수록 예민) */
+  blowLevel?: number
 }

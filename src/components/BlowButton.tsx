@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { BLOW_LEVEL, micLevel, startMic } from '../lib/mic'
+import { blowLevel, micLevel, startMic } from '../lib/mic'
 
 const NEED = 1.2 // 초 동안 불면 완료
 
@@ -15,7 +15,7 @@ export function BlowButton({ mic, onPuff, onDone }: { mic: boolean; onPuff: () =
     let raf = 0, last = performance.now()
     const tick = (t: number) => {
       const s = st.current, dt = (t - last) / 1000; last = t
-      const blowing = s.holding || (mic && micLevel() > BLOW_LEVEL)
+      const blowing = s.holding || (mic && micLevel() > blowLevel())
       if (blowing) { s.prog += dt; s.puffT += dt; if (s.puffT > 0.12) { s.puffT = 0; onPuff() } }
       else s.prog = Math.max(0, s.prog - dt * 0.25)
       setProg(s.prog)

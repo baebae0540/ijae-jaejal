@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listVoices, onVoicesChanged, playSeq, setVoice, voiceStatus, type VoiceOption } from '../lib/speech'
-import { BLOW_LEVEL, micLevel, startMic } from '../lib/mic'
+import { DEFAULT_BLOW_LEVEL, blowLevel, micLevel, setBlowLevel, startMic } from '../lib/mic'
 import type { Settings, Story } from '../data/types'
 
 export function SettingsPanel({ settings, onChange, usedSec, onResetUsed, saved, onDelete, onClose }: {
@@ -75,7 +75,16 @@ export function SettingsPanel({ settings, onChange, usedSec, onResetUsed, saved,
             if (await startMic()) { set({ mic: true }); setMicMsg('이제 입으로 후~ 불면 진행돼요.') }
             else setMicMsg('마이크를 쓸 수 없어요. 권한을 확인해 주세요. 꾹 누르기로 진행돼요.')
           }}>{settings.mic ? '🎤 마이크 켜짐' : '🎤 마이크로 불기 켜기'}</button>
-          {settings.mic && <MicMeter />}
+          {settings.mic && <>
+            <MicMeter />
+            <div className="seg">
+              {[[0.035, '둔하게'], [DEFAULT_BLOW_LEVEL, '보통'], [0.01, '예민하게']].map(([v, l]) => (
+                <button key={l} className={(settings.blowLevel ?? DEFAULT_BLOW_LEVEL) === v ? 'on' : ''}
+                  onClick={() => { setBlowLevel(v as number); set({ blowLevel: v as number }) }}>{l}</button>
+              ))}
+            </div>
+            <div className="small">후~ 불어도 선을 못 넘으면 '예민하게', 가만히 있어도 넘으면 '둔하게'로 바꿔 주세요.</div>
+          </>}
           <div className="small">{micMsg}</div>
         </div>
         <div className="row">
@@ -101,7 +110,7 @@ function MicMeter() {
     tick()
     return () => cancelAnimationFrame(raf)
   }, [])
-  const max = BLOW_LEVEL * 3, on = lv > BLOW_LEVEL
+  const th = blowLevel(), max = th * 3, on = lv > th
   return (
     <div style={{ margin: '8px 0' }}>
       <div style={{ position: 'relative', height: 14, borderRadius: 7, background: '#0001', overflow: 'hidden' }}>

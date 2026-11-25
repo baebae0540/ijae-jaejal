@@ -4,8 +4,11 @@ let ctx: AudioContext | null = null
 let stream: MediaStream | null = null
 let starting: Promise<boolean> | null = null
 
-/** 이 값보다 크면 "불고 있다"로 봐요 */
-export const BLOW_LEVEL = 0.04
+/** 이 값보다 크면 "불고 있다"로 봐요 (설정의 마이크 감도로 바뀜) */
+export const DEFAULT_BLOW_LEVEL = 0.02
+let blow = DEFAULT_BLOW_LEVEL
+export const blowLevel = () => blow
+export const setBlowLevel = (v: number | undefined) => { blow = v ?? DEFAULT_BLOW_LEVEL }
 
 export const micLevel = () => level
 
