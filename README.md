@@ -48,17 +48,19 @@ docs/story-prompt.md      서버에서 쓸 동화 생성 프롬프트
 
 한계: 화면이 꺼지면 읽기가 멈출 수 있어요 (특히 아이폰).
 
-### 2단계: Capacitor로 앱 만들기
+### 2단계: Capacitor로 앱 만들기 (진행 중)
+- [x] `android/`, `ios/` 네이티브 프로젝트 생성
+- [x] 네이티브 TTS(`@capacitor-community/text-to-speech`), 화면 켜두기(`@capacitor-community/keep-awake`) 연결: `lib/speech.ts`
+- [x] 읽는 목소리·높낮이 선택 (설정 화면, 웹과 앱 모두)
+- [x] 권한: Android `RECORD_AUDIO`, iOS `NSMicrophoneUsageDescription`
+- [ ] 실제 기기에서 빌드·설치 (Xcode 또는 Android Studio 필요)
+- [ ] (선택) 백그라운드 오디오: 가족 녹음 파일 재생
+
 ```bash
-npx cap add android
-npx cap add ios          # Mac에서
-npm run cap:sync         # 웹 빌드 → 네이티브 프로젝트로 복사
+npm run cap:sync         # 웹 빌드 → 네이티브 프로젝트로 복사 (코드 바꿀 때마다)
 npm run cap:android      # Android Studio 열기 → APK 빌드
-npm run cap:ios          # Xcode 열기
+npm run cap:ios          # Xcode 열기 → 아이폰에 설치
 ```
-- 추가할 플러그인 후보: 네이티브 TTS(`@capacitor-community/text-to-speech`), 화면 켜두기(`@capacitor-community/keep-awake`),
-  백그라운드 오디오(가족 녹음 파일 재생). `lib/speech.ts`만 바꾸면 나머지 화면은 그대로예요.
-- 권한: Android `RECORD_AUDIO`, iOS `NSMicrophoneUsageDescription` ("후~ 불기 소리 크기를 재는 데만 써요")
 - 설치
   - **안드로이드(가족용)**: 서명한 APK 파일을 보내서 설치 (설정에서 "출처를 알 수 없는 앱" 허용)
   - **아이폰(가족용)**: Mac의 Xcode로 무료 설치 가능하지만 무료 계정은 7일마다 다시 설치해야 해요.

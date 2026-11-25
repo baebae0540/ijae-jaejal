@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { pickVoice, playSeq } from '../lib/speech'
+import { useEffect, useState } from 'react'
+import { listVoices, onVoicesChanged, playSeq, setVoice, voiceStatus, type VoiceOption } from '../lib/speech'
 import { startMic } from '../lib/mic'
 import type { Settings, Story } from '../data/types'
 
@@ -10,6 +10,21 @@ export function SettingsPanel({ settings, onChange, usedSec, onResetUsed, saved,
 }) {
   const [micMsg, setMicMsg] = useState('기본은 버튼을 꾹 누르는 방식이에요. 마이크를 켜면 실제로 입으로 불어서 진행돼요. 소리 크기만 재고 녹음·저장은 하지 않아요.')
   const set = (p: Partial<Settings>) => onChange({ ...settings, ...p })
+  const [voices, setVoices] = useState<VoiceOption[]>([])
+  const [status, setStatus] = useState(voiceStatus())
+  useEffect(() => {
+    const load = () => { listVoices().then(setVoices); setStatus(voiceStatus()) }
+    load()
+    return onVoicesChanged(load)
+  }, [])
+  /** 목소리·높낮이를 바꾸고 바로 들려주기 */
+  const tryVoice = async (p: Partial<Settings>) => {
+    const n = { ...settings, ...p }
+    onChange(n)
+    await setVoice(n.voice, n.pitch)
+    setStatus(voiceStatus())
+    playSeq([{ text: '안녕! 나는 뚜뚜야. 이 목소리로 읽어 줄게요.' }], n.rate)
+  }
   return (
     <div className="overlay" id="settings">
       <div className="panel">
@@ -28,6 +43,22 @@ export function SettingsPanel({ settings, onChange, usedSec, onResetUsed, saved,
             ))}
           </div>
           <div className="small">느긋하게 말하는 본보기를 들려주려면 '천천히' 이하를 권해요.</div>
+        </div>
+        <div className="row">
+          <label htmlFor="voiceIn">읽는 목소리</label>
+          <select id="voiceIn" value={settings.voice ?? ''} onChange={e => tryVoice({ voice: e.target.value })}>
+            <option value="">자동으로 고르기</option>
+            {voices.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+          </select>
+          <div className="seg">
+            {[[0.9, '낮게'], [1.05, '보통'], [1.2, '높게']].map(([v, l]) => (
+              <button key={v} className={(settings.pitch ?? 1.05) === v ? 'on' : ''}
+                onClick={() => tryVoice({ pitch: v as number })}>{l}</button>
+            ))}
+          </div>
+          <div className="small">{status}<br />
+            더 자연스러운 목소리를 받으려면: 아이폰 설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성 → 한국어에서 '향상된 음성'을 내려받아 주세요.
+            안드로이드는 설정 → 텍스트 음성 변환에서 바꿀 수 있어요.</div>
         </div>
         <div className="row">
           <label htmlFor="limitIn">하루 사용 시간</label>
@@ -54,7 +85,6 @@ export function SettingsPanel({ settings, onChange, usedSec, onResetUsed, saved,
             )) : '아직 저장한 이야기가 없어요.'}
           </div>
         </div>
-        <div className="row small">{pickVoice()}</div>
         <button className="pbtn" onClick={onClose}>닫기</button>
       </div>
     </div>

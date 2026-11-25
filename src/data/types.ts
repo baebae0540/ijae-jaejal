@@ -29,4 +29,8 @@ export interface Settings {
   rate: number
   limitMin: number
   mic: boolean
+  /** 읽는 목소리 voiceURI ('' 또는 없음 = 자동) */
+  voice?: string
+  /** 목소리 높낮이 (0.9 낮게 ~ 1.2 높게) */
+  pitch?: number
 }
