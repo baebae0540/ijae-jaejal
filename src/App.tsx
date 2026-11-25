@@ -3,7 +3,7 @@ import { STORIES } from './data/stories'
 import type { Settings, Story } from './data/types'
 import { store, today } from './lib/storage'
 import { playSeq, setVoice, stopSpeech } from './lib/speech'
-import { setBlowLevel, startMic } from './lib/mic'
+import { prepareMic, setBlowLevel } from './lib/mic'
 import { useLongPress } from './lib/hooks'
 import { iconSVG } from './art/art'
 import { Home } from './screens/Home'
@@ -28,8 +28,8 @@ export default function App() {
   useEffect(() => store.set('saved', saved), [saved])
   useEffect(() => { setBlowLevel(settings.blowLevel) }, [settings.blowLevel])
   useEffect(() => { setVoice(settings.voice, settings.pitch) }, [settings.voice, settings.pitch])
-  // 마이크를 켜 둔 경우 다시 열 때 자동으로 연결 시도
-  useEffect(() => { if (settings.mic) startMic().then(ok => { if (!ok) setSettings(s => ({ ...s, mic: false })) }) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // 마이크는 후~ 불기 화면에서만 켜요. 여기서는 터치 때 오디오 준비만 하게 알려 둬요.
+  useEffect(() => prepareMic(settings.mic), [settings.mic])
 
   const library = useMemo(() => [...STORIES, ...saved], [saved])
   const timeUp = settings.limitMin > 0 && usedSec >= settings.limitMin * 60

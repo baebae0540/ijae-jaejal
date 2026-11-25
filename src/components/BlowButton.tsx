@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { blowLevel, micLevel, startMic } from '../lib/mic'
+import { blowLevel, micLevel, startMic, stopMic } from '../lib/mic'
 
 const NEED = 1.2 // 초 동안 불면 완료
 
@@ -9,13 +9,20 @@ export function BlowButton({ mic, onPuff, onDone }: { mic: boolean; onPuff: () =
   const [holding, setHolding] = useState(false)
   const st = useRef({ prog: 0, holding: false, puffT: 0, done: false })
 
-  useEffect(() => { if (mic) startMic() }, [mic])
+  // 이 버튼이 떠 있는 동안에만 마이크를 켜요 (끝나면 바로 꺼서 읽는 소리가 작아지지 않게)
+  const [micOn, setMicOn] = useState(false)
+  useEffect(() => {
+    if (!mic) return
+    let alive = true
+    startMic().then(ok => { if (alive) setMicOn(ok) })
+    return () => { alive = false; stopMic() }
+  }, [mic])
 
   useEffect(() => {
     let raf = 0, last = performance.now()
     const tick = (t: number) => {
       const s = st.current, dt = (t - last) / 1000; last = t
-      const blowing = s.holding || (mic && micLevel() > blowLevel())
+      const blowing = s.holding || (micOn && micLevel() > blowLevel())
       if (blowing) { s.prog += dt; s.puffT += dt; if (s.puffT > 0.12) { s.puffT = 0; onPuff() } }
       else s.prog = Math.max(0, s.prog - dt * 0.25)
       setProg(s.prog)
@@ -24,7 +31,7 @@ export function BlowButton({ mic, onPuff, onDone }: { mic: boolean; onPuff: () =
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [mic, onPuff, onDone])
+  }, [micOn, onPuff, onDone])
 
   const set = (v: boolean) => { st.current.holding = v; setHolding(v) }
   return (
@@ -40,7 +47,7 @@ export function BlowButton({ mic, onPuff, onDone }: { mic: boolean; onPuff: () =
           후~
         </span>
       </button>
-      <div className="blowlabel">{mic ? '입으로 후~ 불어 봐! (꾹 눌러도 돼요)' : '꾹 누르고 후~ 불어 봐!'}</div>
+      <div className="blowlabel">{micOn ? '입으로 후~ 불어 봐! (꾹 눌러도 돼요)' : '꾹 누르고 후~ 불어 봐!'}</div>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listVoices, onVoicesChanged, playSeq, setVoice, voiceStatus, type VoiceOption } from '../lib/speech'
-import { DEFAULT_BLOW_LEVEL, blowLevel, micLevel, setBlowLevel, startMic } from '../lib/mic'
+import { DEFAULT_BLOW_LEVEL, blowLevel, micLevel, setBlowLevel, startMic, stopMic } from '../lib/mic'
 import type { Settings, Story } from '../data/types'
 
 export function SettingsPanel({ settings, onChange, usedSec, onResetUsed, saved, onDelete, onClose }: {
@@ -71,10 +71,12 @@ export function SettingsPanel({ settings, onChange, usedSec, onResetUsed, saved,
         </div>
         <div className="row">
           <label>후~ 불기</label>
-          <button className="pbtn ghost" disabled={settings.mic} onClick={async () => {
-            if (await startMic()) { set({ mic: true }); setMicMsg('이제 입으로 후~ 불면 진행돼요.') }
+          <button className="pbtn ghost" onClick={async () => {
+            if (settings.mic) { set({ mic: false }); setMicMsg('꾹 누르기로 진행해요.'); return }
+            const ok = await startMic(); stopMic()
+            if (ok) { set({ mic: true }); setMicMsg('후~ 불기 화면에서만 마이크가 잠깐 켜지고, 끝나면 바로 꺼져요.') }
             else setMicMsg('마이크를 쓸 수 없어요. 권한을 확인해 주세요. 꾹 누르기로 진행돼요.')
-          }}>{settings.mic ? '🎤 마이크 켜짐' : '🎤 마이크로 불기 켜기'}</button>
+          }}>{settings.mic ? '🎤 마이크로 불기 끄기' : '🎤 마이크로 불기 켜기'}</button>
           {settings.mic && <>
             <MicMeter />
             <div className="seg">
@@ -106,9 +108,10 @@ function MicMeter() {
   const [lv, setLv] = useState(0)
   useEffect(() => {
     let raf = 0
+    startMic()   // 이 막대가 보이는 동안만 마이크를 켜요
     const tick = () => { setLv(micLevel()); raf = requestAnimationFrame(tick) }
     tick()
-    return () => cancelAnimationFrame(raf)
+    return () => { cancelAnimationFrame(raf); stopMic() }
   }, [])
   const th = blowLevel(), max = th * 3, on = lv > th
   return (
