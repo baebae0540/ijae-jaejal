@@ -23,11 +23,10 @@ export function CarMode({ stories, settings, onHome }: { stories: Story[]; setti
   const [playing, setPlaying] = useState(false)
   const [view, setView] = useState({ s: 0, p: 0, line: '▶ 를 누르면 이야기가 이어서 나와요' })
   const pos = useRef({ s: 0, i: 0 })
-  const wake = useRef<WakeLockSentinel | null>(null)
 
+  // 화면 켜두기는 speech.ts의 playSeq가 알아서 해요.
   const run = async () => {
     setPlaying(true)
-    try { wake.current ??= await navigator.wakeLock?.request('screen') ?? null } catch { /* 지원 안 함 */ }
     for (;;) {
       const si = pos.current.s % stories.length, items = carItems(stories[si], settings), from = pos.current.i
       const ok = await playSeq(items.slice(from), settings.rate, (it, k) => {
@@ -38,13 +37,13 @@ export function CarMode({ stories, settings, onHome }: { stories: Story[]; setti
       pos.current = { s: (si + 1) % stories.length, i: 0 }
     }
   }
-  const pause = () => { setPlaying(false); stopSpeech(); wake.current?.release().catch(() => {}); wake.current = null }
+  const pause = () => { setPlaying(false); stopSpeech() }
   const jump = (d: number) => {
     const s = d < 0 && pos.current.i > 3 ? pos.current.s : (pos.current.s + d + stories.length) % stories.length
     pos.current = { s, i: 0 }; stopSpeech(); run()
   }
 
-  useEffect(() => { run(); return () => { stopSpeech(); wake.current?.release().catch(() => {}) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { run(); return () => stopSpeech() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const st = stories[view.s % stories.length]
   return (

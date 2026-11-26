@@ -89,12 +89,44 @@ if (hasWebTTS && typeof document !== 'undefined') {
   }, { capture: true })
 }
 
-/** 앱에서는 읽는 동안 화면이 꺼지지 않게 해요 (꺼지면 읽기가 멈춰요). */
+/**
+ * 읽는 동안 화면이 꺼지지 않게 해요 (꺼지면 읽기가 멈춰요).
+ * - 앱: keep-awake 플러그인 / 웹(PWA): Screen Wake Lock API (iOS 18.4+ 홈 화면 앱, 안드로이드 크롬)
+ * - 다 읽은 뒤에도 잠깐(RELEASE_DELAY) 유지해서 페이지 넘김·후~ 불기 사이에 화면이 꺼지지 않게 해요.
+ */
+const RELEASE_DELAY = 60_000
 let awake = false
-function keepAwake(on: boolean) {
-  if (!isNative || awake === on) return
+let releaseTimer: ReturnType<typeof setTimeout> | undefined
+let webLock: WakeLockSentinel | null = null
+
+async function webLockOn() {
+  if (webLock || typeof navigator === 'undefined' || !('wakeLock' in navigator)) return
+  try {
+    const lock = await navigator.wakeLock.request('screen')
+    if (!awake) { lock.release().catch(() => {}); return }   // 기다리는 사이에 꺼졌으면 바로 풀기
+    webLock = lock
+    lock.addEventListener('release', () => { if (webLock === lock) webLock = null })
+  } catch { /* 지원 안 함·권한 없음 */ }
+}
+// 다른 앱에 갔다 오면 브라우저가 잠금을 풀어서, 돌아왔을 때 다시 잡아요.
+if (!isNative && typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (awake && document.visibilityState === 'visible') webLockOn()
+  })
+}
+
+function setAwake(on: boolean) {
+  if (awake === on) return
   awake = on
-  ;(on ? KeepAwake.keepAwake() : KeepAwake.allowSleep()).catch(() => {})
+  if (isNative) { (on ? KeepAwake.keepAwake() : KeepAwake.allowSleep()).catch(() => {}); return }
+  if (on) webLockOn()
+  else { webLock?.release().catch(() => {}); webLock = null }
+}
+
+function keepAwake(on: boolean, delay = 0) {
+  clearTimeout(releaseTimer)
+  if (on || !delay) setAwake(on)
+  else releaseTimer = setTimeout(() => setAwake(false), delay)
 }
 
 export const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
@@ -107,7 +139,7 @@ function cancelAll() {
 export function stopSpeech() {
   runId++
   cancelAll()
-  keepAwake(false)
+  keepAwake(false, RELEASE_DELAY)
 }
 
 function speak(text: string, rate: number) {
@@ -145,7 +177,7 @@ export async function playSeq(items: SpeechItem[], rate: number, onItem?: (it: S
     if ('pause' in it) await sleep(it.pause)
     else await speak(it.text, it.rate ?? rate)
   }
-  if (id === runId) keepAwake(false)
+  if (id === runId) keepAwake(false, RELEASE_DELAY)
   return id === runId
 }
 
