@@ -50,7 +50,23 @@ docs/story-prompt.md      서버에서 쓸 동화 생성 프롬프트
 읽는 동안(그리고 다 읽은 뒤 1분 동안)은 Screen Wake Lock으로 화면을 켜 둬요. 아이폰은 iOS 18.4 이상에서 홈 화면 앱으로 열었을 때 동작해요.
 한계: 그보다 낮은 iOS이거나 사용자가 전원 버튼으로 화면을 끄면 읽기가 멈출 수 있어요.
 
-### 2단계: Capacitor로 앱 만들기 (진행 중)
+### 2단계: 웹 버전 완성 (진행 중, 무료)
+- [x] 읽는 동안 화면 켜두기 (Screen Wake Lock)
+- [x] 서버 없이 동화 만들기 (`data/storyMaker.ts`)
+- [ ] 기본 동화 늘리기 (3편 → 8편 정도)
+- [ ] 동화 만들기 다듬기: 단어 늘리기, 종류별 이야기 틀 여러 개, 한 단어일 때 길이 보강
+- [ ] 저장한 동화 백업: 파일로 내보내기·가져오기 (기기를 바꿔도 유지)
+- [ ] 마무리: 첫 실행 안내, 새 버전 알림, 개인정보 안내 페이지, 실제 기기 전체 점검
+
+### 3단계: 동화 생성 서버 (ASP.NET Core, 유료라 보류)
+지금은 서버가 없으면 `data/storyMaker.ts`의 이야기 틀로 기기 안에서 바로 동화를 만들어요 (무료, 오프라인). 서버를 연결하면 AI가 쓴 동화로 바뀌어요.
+- `POST /api/stories` `{ words: string[], childName: string }` → `{ title, pages[] }`
+- 서버가 Claude API 키를 보관하고 `docs/story-prompt.md` 프롬프트로 호출
+- 요청 제한, 응답 검사, 로그에서 개인정보 제외
+- 앱 `.env`에 `VITE_STORY_API_URL=https://...` 설정
+
+### 최종 단계 A: Capacitor로 앱 만들기 (준비만 해 둠)
+웹 버전을 마무리한 뒤에 진행해요. 네이티브 프로젝트와 플러그인 연결은 끝나 있어요.
 - [x] `android/`, `ios/` 네이티브 프로젝트 생성
 - [x] 네이티브 TTS(`@capacitor-community/text-to-speech`), 화면 켜두기(`@capacitor-community/keep-awake`) 연결: `lib/speech.ts`
 - [x] 읽는 목소리·높낮이 선택 (설정 화면, 웹과 앱 모두)
@@ -68,13 +84,6 @@ npm run cap:ios          # Xcode 열기 → 아이폰에 설치
   - **아이폰(가족용)**: Mac의 Xcode로 무료 설치 가능하지만 무료 계정은 7일마다 다시 설치해야 해요.
     Apple Developer Program(연 99달러)에 가입하면 TestFlight로 보내거나 1년짜리 서명을 쓸 수 있어요.
 
-### 3단계: 동화 생성 서버 (ASP.NET Core)
-지금은 서버가 없으면 `data/storyMaker.ts`의 이야기 틀로 기기 안에서 바로 동화를 만들어요 (무료, 오프라인). 서버를 연결하면 AI가 쓴 동화로 바뀌어요.
-- `POST /api/stories` `{ words: string[], childName: string }` → `{ title, pages[] }`
-- 서버가 Claude API 키를 보관하고 `docs/story-prompt.md` 프롬프트로 호출
-- 요청 제한, 응답 검사, 로그에서 개인정보 제외
-- 앱 `.env`에 `VITE_STORY_API_URL=https://...` 설정
-
-### 4단계: 스토어 공개 (선택)
+### 최종 단계 B: 스토어 공개 (선택)
 - Google Play: 등록비 25달러(1회). 2023-11-13 이후 만든 개인 계정은 테스터 12명 이상이 14일 연속 참여하는 비공개 테스트를 거쳐야 출시 가능
 - 아동 대상 앱 정책(Google Play 가족 정책, App Store 키즈 카테고리): 광고·추적 SDK 금지, 개인정보처리방침, 보호자 확인 화면
