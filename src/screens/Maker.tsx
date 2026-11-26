@@ -4,10 +4,10 @@ import { iconSVG } from '../art/art'
 import { generateStory, storyApiReady } from '../services/storyApi'
 import { playSeq } from '../lib/speech'
 import { fillName } from '../lib/text'
+import { makeLocalStory, WORD_INFO } from '../data/storyMaker'
 import type { Settings, Story } from '../data/types'
 
-const WORDS: [string, string][] = [['🦖','공룡'],['🚒','소방차'],['🍌','바나나'],['🐶','강아지'],['🚀','로켓'],['🌈','무지개'],['🐳','고래'],['🍦','아이스크림'],
-  ['🚂','기차'],['🐰','토끼'],['🎈','풍선'],['🏰','성'],['🐻','곰'],['🌙','달'],['🍎','사과'],['🐢','거북이'],['🚜','트랙터'],['🦁','사자'],['🐧','펭귄'],['🍪','쿠키']]
+const WORDS = Object.entries(WORD_INFO).map(([w, i]) => [i.em, w] as [string, string])
 
 export function Maker({ settings, savedIds, onRead, onSave, onBack }: {
   settings: Settings; savedIds: Set<string>
@@ -27,7 +27,8 @@ export function Maker({ settings, savedIds, onRead, onSave, onBack }: {
   }
   const make = async (words: string[]) => {
     setMsg('')
-    if (!storyApiReady()) { setMsg('동화 만들기는 서버를 연결한 뒤(3단계)에 쓸 수 있어요. .env의 VITE_STORY_API_URL을 확인해 주세요.'); return }
+    // 서버(3단계)가 없으면 기기 안의 이야기 틀로 바로 만들어요
+    if (!storyApiReady()) { setPreview(makeLocalStory(words)); return }
     ctl.current = new AbortController(); setBusy(true)
     try { setPreview(await generateStory(words, settings.name, ctl.current.signal)) }
     catch (e) {

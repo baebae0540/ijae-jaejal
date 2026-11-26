@@ -243,6 +243,12 @@ party:(u:string)=>{const cols=['#F7A8B8','#FFD34E','#8CC7E0','#9BD483','#F3A65A'
 };
 
 let UID=0;
+/** 'em:🐶'처럼 쓰면 기기의 이모지 글꼴로 그려요 (SVG 그림이 없는 단어용) */
+const esc=(t:string)=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]!));
+export const isActor=(n:string)=>n in ACT||(n.startsWith('em:')&&n.length>3&&n.length<=12);
+const drawActor=(n:string,u:string)=>n.startsWith('em:')
+  ?`<text x="50" y="86" font-size="84" text-anchor="middle">${esc(n.slice(3))}</text>`
+  :(ACT[n]??ACT.dino)(u);
 const W:Record<string,number>={straw:100,wood:100,brick:100,hut:100,tree:100,brachio:100,cake:96,rope:40,candle:36,egg:80,gift:72,basketFull:70,basketEmpty:70,sorghum:80,ptero:96,wolf:96,tiger:96,dino:92,dinoSleep:92,zzz:70};
 const NOIDLE=new Set(['straw','wood','brick','hut','tree','rope','sorghum','basketFull','basketEmpty','gift','cake','candle','egg']);
 const NOSHADOW=new Set(['rope','ptero','zzz']);
@@ -262,7 +268,7 @@ export function sceneSVG(pg:Page){
   items.forEach((it,i)=>{
     const sc=it.sc, tx=it.cx-50*sc, ty=405-100*sc-it.lift;
     if(!NOSHADOW.has(it.n)&&!it.lift) s+=`<ellipse cx="${it.cx.toFixed(0)}" cy="406" rx="${((W[it.n]||88)*sc*.38).toFixed(0)}" ry="6" fill="#000" opacity=".12"/>`;
-    s+=`<g transform="translate(${tx.toFixed(1)} ${ty.toFixed(1)}) scale(${sc.toFixed(3)})"><g class="actor" data-i="${i}"><g class="${NOIDLE.has(it.n)?'':'idle'}" style="animation-delay:-${(i*.7).toFixed(1)}s">${ACT[it.n](u+'a'+i)}</g></g></g>`;
+    s+=`<g transform="translate(${tx.toFixed(1)} ${ty.toFixed(1)}) scale(${sc.toFixed(3)})"><g class="actor" data-i="${i}"><g class="${NOIDLE.has(it.n)?'':'idle'}" style="animation-delay:-${(i*.7).toFixed(1)}s">${drawActor(it.n,u+'a'+i)}</g></g></g>`;
   });
   return s+'</svg>';
 }

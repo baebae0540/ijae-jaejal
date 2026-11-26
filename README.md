@@ -25,6 +25,7 @@ src/
   art/art.ts              배경 7종, 캐릭터·소품 25종, 장면 조립(sceneSVG)
   data/types.ts           Story / Page / Settings 타입
   data/stories.ts         기본 동화 3편
+  data/storyMaker.ts      서버 없이 만드는 동화 (단어별 이야기 틀, 조사 자동)
   lib/speech.ts           내레이션 엔진 (문장 단위 읽기, 쉬기, 중단 토큰)
   lib/mic.ts              후~ 불기용 마이크 소리 크기
   lib/storage.ts          localStorage 래퍼
@@ -68,6 +69,7 @@ npm run cap:ios          # Xcode 열기 → 아이폰에 설치
     Apple Developer Program(연 99달러)에 가입하면 TestFlight로 보내거나 1년짜리 서명을 쓸 수 있어요.
 
 ### 3단계: 동화 생성 서버 (ASP.NET Core)
+지금은 서버가 없으면 `data/storyMaker.ts`의 이야기 틀로 기기 안에서 바로 동화를 만들어요 (무료, 오프라인). 서버를 연결하면 AI가 쓴 동화로 바뀌어요.
 - `POST /api/stories` `{ words: string[], childName: string }` → `{ title, pages[] }`
 - 서버가 Claude API 키를 보관하고 `docs/story-prompt.md` 프롬프트로 호출
 - 요청 제한, 응답 검사, 로그에서 개인정보 제외
